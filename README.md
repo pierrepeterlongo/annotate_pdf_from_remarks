@@ -66,14 +66,7 @@ If anything was skipped — a remarks-file line that failed to parse, or a
 remark whose anchor could not be resolved in the PDF — it is, in addition
 to being printed on stderr, also written into a visible, bordered box
 (a PDF FreeText annotation) on the **first page** of the output PDF, along
-with the author and date. Only the raw, verbatim remarks-file line(s) are
-shown — not where they appear in the remarks file or why they failed, since
-what the manuscript's author needs is the exact text to go fix. Long lines
-wrap automatically; the box is sized to what it actually contains, and if
-that does not fit on one page, extra blank pages are inserted right after
-the first page to hold the rest. This box only appears when there is
-something to report; a fully clean run adds no such box and no extra
-pages.
+with the author and date. 
 
 Run `annotate-pdf-from-remarks --help` for all options, notably:
 
