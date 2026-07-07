@@ -15,6 +15,14 @@
   `add_report_annotations` (plural). `remarks_parser.parse_remarks`'s
   `warnings` are now dicts (`{"line": int, "raw": str}`) instead of
   pre-formatted strings.
+- Packaging: `pyproject.toml`'s `[project].version` is now the single
+  source of truth (previously duplicated into `__init__.py`);
+  `annotate_pdf_from_remarks.__version__` now reads it back from the
+  installed package's metadata at import time.
+- Added a GitHub Actions workflow (`.github/workflows/tests.yml`) running
+  the test suite on Linux/macOS/Windows × Python 3.9/3.12, and README
+  badges (version, license, Python, tests) -- the version badge reads
+  `pyproject.toml` directly from GitHub, so it never goes stale.
 
 ## 0.1.3 — 2026-07-07
 

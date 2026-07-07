@@ -1,10 +1,18 @@
 # annotate-pdf-from-remarks
 
+![Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fpierrepeterlongo%2Fannotate_pdf_from_remarks%2Fmain%2Fpyproject.toml&query=%24.project.version&label=version&color=blue)
+![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)
+![Python](https://img.shields.io/badge/python-%E2%89%A53.9-blue)
+[![tests](https://github.com/pierrepeterlongo/annotate_pdf_from_remarks/actions/workflows/tests.yml/badge.svg)](https://github.com/pierrepeterlongo/annotate_pdf_from_remarks/actions/workflows/tests.yml)
+
 Turn a plain-text list of review remarks into native PDF comment
 annotations, placed automatically next to the line, figure, or heading they
 refer to.
 
-Version: **0.1.0** (see [CHANGELOG.md](CHANGELOG.md)).
+See [CHANGELOG.md](CHANGELOG.md) for release history. The version badge
+above reads `pyproject.toml`'s `[project].version` directly from GitHub, so
+it updates on its own whenever that field is bumped — no README edit
+needed.
 
 ## Requirement: the PDF must carry printed line numbers
 
