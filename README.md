@@ -58,6 +58,17 @@ This writes `manuscript_annotated.pdf`, a copy of `manuscript.pdf` with one
 native PDF comment (sticky-note) annotation per remark, readable in any PDF
 viewer (Preview, Acrobat, Foxit, `evince`, ...).
 
+`--author` and `--date` are optional: if not given, they default to the
+current OS login (`getpass.getuser()`) and today's date (ISO 8601),
+respectively.
+
+If anything was skipped — a remarks-file line that failed to parse, or a
+remark whose anchor could not be resolved in the PDF — it is, in addition
+to being printed on stderr, also written into a visible, bordered box
+(a PDF FreeText annotation) on the **first page** of the output PDF, along
+with the author and date. This box only appears when there is something to
+report; a fully clean run adds no such box.
+
 Run `annotate-pdf-from-remarks --help` for all options, notably:
 
 - `--dump-index FILE`: write the detected `{line_number: [page, bbox]}` map
@@ -88,11 +99,15 @@ find:"Figure 1.2",page=9,occurrence=1:this is the second, duplicate caption
 ```
 
 - **`l<N>: text`** — anchors the remark to printed margin line number `N`
-  (case-insensitive `l`/`L`).
+  (case-insensitive `l`/`L`; the colon can be replaced by a plain space,
+  e.g. `l87 this sentence is unclear`, but at least one separator character
+  is required).
 - **`find:"literal text":text`** — anchors the remark to the first place in
-  the document where `literal text` appears verbatim. Use this for figures,
-  section headings, definitions, or anything not tied to a specific line
-  number.
+  the document where `literal text` appears verbatim (matching is
+  case-insensitive). Use this for figures, section headings, definitions,
+  or anything not tied to a specific line number. Whitespace after `find:`
+  is tolerated (`find: "literal text": text` also works), but the quotes
+  and the final `:` before the remark text are mandatory.
   - `find:"literal text",page=P:text` restricts the search to (0-indexed)
     page `P`.
   - `find:"literal text",page=P,occurrence=K:text` picks the `K`-th

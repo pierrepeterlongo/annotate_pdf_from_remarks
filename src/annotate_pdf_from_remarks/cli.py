@@ -1,13 +1,19 @@
 """Command-line entry point: annotate-pdf-from-remarks."""
 
 import argparse
+import datetime
+import getpass
 import json
 import sys
 
 import fitz
 
 from annotate_pdf_from_remarks import __version__
-from annotate_pdf_from_remarks.annotate import annotate_pdf
+from annotate_pdf_from_remarks.annotate import (
+    add_report_annotation,
+    annotate_pdf,
+    build_report_text,
+)
 from annotate_pdf_from_remarks.line_index import build_line_index
 from annotate_pdf_from_remarks.remarks_parser import parse_remarks_file
 
@@ -32,7 +38,18 @@ def parse_args(argv=None):
     parser.add_argument(
         "--author",
         default=None,
-        help="Author name recorded on each PDF annotation (optional).",
+        help=(
+            "Author name recorded on each PDF annotation. Defaults to the "
+            "current OS login if not given."
+        ),
+    )
+    parser.add_argument(
+        "--date",
+        default=None,
+        help=(
+            "Date recorded on the first-page report box (any format you "
+            "like). Defaults to today's date (ISO 8601) if not given."
+        ),
     )
     parser.add_argument(
         "--margin-frac",
@@ -68,6 +85,10 @@ def parse_args(argv=None):
 
 def main(argv=None):
     args = parse_args(argv)
+    if args.author is None:
+        args.author = getpass.getuser()
+    if args.date is None:
+        args.date = datetime.date.today().isoformat()
 
     doc = fitz.open(args.pdf)
     line_index = build_line_index(
@@ -85,6 +106,13 @@ def main(argv=None):
         print(f"WARNING: {warning}", file=sys.stderr)
 
     placed, failures = annotate_pdf(doc, line_index, remarks, author=args.author)
+
+    report_text = build_report_text(
+        warnings, failures, author=args.author, date=args.date
+    )
+    if report_text:
+        add_report_annotation(doc, report_text)
+
     doc.save(args.output, garbage=4, deflate=True)
 
     print(f"{len(line_index)} printed line numbers detected in {args.pdf}")
@@ -93,6 +121,11 @@ def main(argv=None):
         print(f"{len(failures)} remark(s) could NOT be anchored:", file=sys.stderr)
         for remark, reason in failures:
             print(f"  - {reason} (remark: {remark['remark'][:80]!r})", file=sys.stderr)
+    if report_text:
+        print(
+            "A report of the above was also added as a visible box on the "
+            "first page of the output PDF."
+        )
 
     return 1 if (failures or warnings) else 0
 

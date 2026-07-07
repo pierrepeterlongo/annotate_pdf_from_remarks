@@ -2,13 +2,16 @@
 
 Supported syntax, one remark per logical entry:
 
-``l87: some remark``
+``l87: some remark`` (or ``l87 some remark``, ``L87: some remark``, ...)
     Anchors the remark to printed margin line number 87 (case-insensitive
-    ``l``/``L``).
+    ``l``/``L``; the colon is optional as long as at least one whitespace
+    separates the line number from the remark text).
 
-``find:"Figure 1.2":some remark``
+``find:"Figure 1.2":some remark`` (or ``find: "Figure 1.2": some remark``)
     Anchors the remark to the first occurrence, anywhere in the document, of
-    the literal text ``Figure 1.2``.
+    the literal text ``Figure 1.2``. Whitespace after ``find:`` and around
+    the trailing ``:`` is tolerated, but the quotes and the final ``:``
+    before the remark text are mandatory.
 
 ``find:"Figure 1.2",page=9:some remark``
     Same, but restricted to (0-indexed) page 9.
@@ -30,9 +33,9 @@ silently dropped or silently merged into the previous remark.
 
 import re
 
-_LINE_ANCHOR_RE = re.compile(r"^[lL](\d+)\s*:\s*(.*)$")
+_LINE_ANCHOR_RE = re.compile(r"^[lL](\d+)(?:\s+|:\s*)(.*)$")
 _FIND_ANCHOR_RE = re.compile(
-    r'^find:"(?P<text>(?:[^"\\]|\\.)*)"'
+    r'^find:\s*"(?P<text>(?:[^"\\]|\\.)*)"'
     r"(?:,\s*page=(?P<page>\d+))?"
     r"(?:,\s*occurrence=(?P<occurrence>\d+))?"
     r"\s*:\s*(?P<remark>.*)$"

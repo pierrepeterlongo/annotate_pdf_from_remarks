@@ -1,5 +1,7 @@
 """Resolve parsed remarks to PDF locations and write them as PDF comments."""
 
+import datetime
+
 import fitz
 
 
@@ -77,3 +79,61 @@ def annotate_pdf(doc, line_index, remarks, author=None):
         annot.update()
         placed += 1
     return placed, failures
+
+
+def build_report_text(warnings, failures, author=None, date=None):
+    """Build the text of the on-page report summarising everything that did
+    NOT make it into a PDF annotation: remarks-file lines that failed to
+    parse, and remarks whose anchor could not be resolved in the PDF.
+
+    Returns ``None`` if there is nothing to report.
+    """
+    if not warnings and not failures:
+        return None
+
+    if date is None:
+        date = datetime.date.today().isoformat()
+
+    lines = ["Annotation report"]
+    if author:
+        lines.append(f"Author: {author}")
+    lines.append(f"Date: {date}")
+
+    if warnings:
+        lines.append("")
+        lines.append(f"{len(warnings)} remarks-file line(s) skipped (unrecognized syntax):")
+        lines.extend(f"- {warning}" for warning in warnings)
+
+    if failures:
+        lines.append("")
+        lines.append(f"{len(failures)} remark(s) could not be anchored in the PDF:")
+        lines.extend(
+            f"- {reason} (remark: {remark['remark'][:80]!r})"
+            for remark, reason in failures
+        )
+
+    return "\n".join(lines)
+
+
+def add_report_annotation(doc, text, page_index=0, margin=36, line_height=11, fontsize=8):
+    """Add ``text`` as a bordered, filled-in text box directly on
+    ``doc[page_index]`` (a PDF FreeText annotation) -- unlike the
+    per-remark comments, its content is visible without clicking anything.
+    """
+    page = doc[page_index]
+    n_lines = text.count("\n") + 1
+    width = page.rect.width - 2 * margin
+    height = min(n_lines * line_height + 2 * margin, page.rect.height - 2 * margin)
+    rect = fitz.Rect(margin, margin, margin + width, margin + height)
+
+    annot = page.add_freetext_annot(
+        rect,
+        text,
+        fontsize=fontsize,
+        text_color=(0, 0, 0),
+        fill_color=(1, 1, 0.75),
+        border_width=1,
+        align=0,
+    )
+    annot.update()
+    return annot

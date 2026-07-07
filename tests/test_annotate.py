@@ -2,7 +2,11 @@ from pathlib import Path
 
 import fitz
 
-from annotate_pdf_from_remarks.annotate import annotate_pdf
+from annotate_pdf_from_remarks.annotate import (
+    add_report_annotation,
+    annotate_pdf,
+    build_report_text,
+)
 from annotate_pdf_from_remarks.line_index import build_line_index
 from annotate_pdf_from_remarks.remarks_parser import parse_remarks_file
 
@@ -48,3 +52,31 @@ def test_unresolvable_anchor_is_reported_not_raised(sample_pdf_path):
     assert len(failures) == 1
     assert failures[0][0] is remarks[0]
     doc.close()
+
+
+def test_build_report_text_is_none_when_nothing_to_report():
+    assert build_report_text([], [], author="Test Author") is None
+
+
+def test_report_annotation_shows_author_date_warnings_and_failures(sample_pdf_path, tmp_path):
+    warnings = ["line 5: unrecognized syntax, skipped: 'garbled input'"]
+    failures = [({"remark": "some remark"}, "printed line 9999 not found in the line index")]
+
+    text = build_report_text(warnings, failures, author="Test Author", date="2026-07-07")
+    assert "Author: Test Author" in text
+    assert "Date: 2026-07-07" in text
+    assert "garbled input" in text
+    assert "printed line 9999 not found" in text
+
+    doc = fitz.open(sample_pdf_path)
+    add_report_annotation(doc, text)
+    output_path = str(tmp_path / "report.pdf")
+    doc.save(output_path)
+    doc.close()
+
+    reopened = fitz.open(output_path)
+    first_page = reopened[0]  # keep a live reference: annots are unbound once the page is GC'd
+    first_page_annots = list(first_page.annots())
+    assert len(first_page_annots) == 1
+    assert first_page_annots[0].type[1] == "FreeText"
+    assert "Test Author" in first_page_annots[0].info["content"]
