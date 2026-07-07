@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "annotate-pdf-from-remarks"
+dynamic = ["version"]
+description = "Add PDF comment annotations to a line-numbered PDF from a plain-text remarks file"
+readme = "README.md"
+license = { text = "AGPL-3.0-or-later" }
+requires-python = ">=3.9"
+dependencies = [
+    "pymupdf>=1.23",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+annotate-pdf-from-remarks = "annotate_pdf_from_remarks.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "annotate_pdf_from_remarks.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
