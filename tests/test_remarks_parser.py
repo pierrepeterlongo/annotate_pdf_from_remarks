@@ -18,6 +18,10 @@ l3: this line could be phrased more precisely
         "this line could be phrased more precisely\n"
         "continuation of the same remark"
     )
+    assert remarks[0]["raw"] == (
+        "l3: this line could be phrased more precisely\n"
+        "\tcontinuation of the same remark"
+    )
 
 
 def test_find_anchor_with_page_and_occurrence():
@@ -47,7 +51,7 @@ def test_unrecognized_line_is_reported_not_dropped_silently():
 
     assert remarks == []
     assert len(warnings) == 1
-    assert "unrecognized syntax" in warnings[0]
+    assert warnings[0] == {"line": 1, "raw": "this line has no anchor prefix"}
 
 
 def test_blank_line_ends_a_continuation_block():

@@ -3,9 +3,10 @@ from pathlib import Path
 import fitz
 
 from annotate_pdf_from_remarks.annotate import (
-    add_report_annotation,
+    add_report_annotations,
     annotate_pdf,
-    build_report_text,
+    build_report_header,
+    collect_report_entries,
 )
 from annotate_pdf_from_remarks.line_index import build_line_index
 from annotate_pdf_from_remarks.remarks_parser import parse_remarks_file
@@ -54,22 +55,35 @@ def test_unresolvable_anchor_is_reported_not_raised(sample_pdf_path):
     doc.close()
 
 
-def test_build_report_text_is_none_when_nothing_to_report():
-    assert build_report_text([], [], author="Test Author") is None
+def test_collect_report_entries_is_empty_when_nothing_to_report():
+    assert collect_report_entries([], []) == []
 
 
-def test_report_annotation_shows_author_date_warnings_and_failures(sample_pdf_path, tmp_path):
-    warnings = ["line 5: unrecognized syntax, skipped: 'garbled input'"]
-    failures = [({"remark": "some remark"}, "printed line 9999 not found in the line index")]
+def test_report_shows_raw_lines_with_no_location_reference(sample_pdf_path, tmp_path):
+    warnings = [{"line": 5, "raw": "garbled input, not a valid anchor"}]
+    failures = [
+        (
+            {"remark": "some remark", "raw": 'l9999: some remark that will not anchor'},
+            "printed line 9999 not found in the line index",
+        )
+    ]
 
-    text = build_report_text(warnings, failures, author="Test Author", date="2026-07-07")
-    assert "Author: Test Author" in text
-    assert "Date: 2026-07-07" in text
-    assert "garbled input" in text
-    assert "printed line 9999 not found" in text
+    entries = collect_report_entries(warnings, failures)
+    assert entries == [
+        "garbled input, not a valid anchor",
+        "l9999: some remark that will not anchor",
+    ]
+
+    header = build_report_header(author="Test Author", date="2026-07-07")
+    assert "Author: Test Author" in header
+    assert "Date: 2026-07-07" in header
+    # The report is about raw lines, not about where/why they failed.
+    assert "line 5" not in header
+    assert "printed line 9999 not found" not in header
 
     doc = fitz.open(sample_pdf_path)
-    add_report_annotation(doc, text)
+    annots = add_report_annotations(doc, header, entries)
+    assert len(annots) == 1
     output_path = str(tmp_path / "report.pdf")
     doc.save(output_path)
     doc.close()
@@ -79,4 +93,21 @@ def test_report_annotation_shows_author_date_warnings_and_failures(sample_pdf_pa
     first_page_annots = list(first_page.annots())
     assert len(first_page_annots) == 1
     assert first_page_annots[0].type[1] == "FreeText"
-    assert "Test Author" in first_page_annots[0].info["content"]
+    content = first_page_annots[0].info["content"]
+    assert "Test Author" in content
+    assert "garbled input, not a valid anchor" in content
+    assert "l9999: some remark that will not anchor" in content
+
+
+def test_report_overflows_onto_extra_pages_when_too_long(sample_pdf_path, tmp_path):
+    header = build_report_header(author="Test Author", date="2026-07-07")
+    # Each entry is sized to force only a couple of entries per page.
+    long_entry = "x" * 4000
+    entries = [long_entry, long_entry, long_entry]
+
+    doc = fitz.open(sample_pdf_path)
+    original_page_count = doc.page_count
+    annots = add_report_annotations(doc, header, entries)
+
+    assert len(annots) > 1
+    assert doc.page_count == original_page_count + (len(annots) - 1)

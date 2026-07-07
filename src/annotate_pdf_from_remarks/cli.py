@@ -10,9 +10,10 @@ import fitz
 
 from annotate_pdf_from_remarks import __version__
 from annotate_pdf_from_remarks.annotate import (
-    add_report_annotation,
+    add_report_annotations,
     annotate_pdf,
-    build_report_text,
+    build_report_header,
+    collect_report_entries,
 )
 from annotate_pdf_from_remarks.line_index import build_line_index
 from annotate_pdf_from_remarks.remarks_parser import parse_remarks_file
@@ -54,10 +55,14 @@ def parse_args(argv=None):
     parser.add_argument(
         "--margin-frac",
         type=float,
-        default=0.15,
+        default=0.2,
         help=(
-            "Fraction of the page width, from each edge, considered "
-            "margin when detecting printed line numbers (default: 0.15)."
+            "Fraction of the page width, from each edge, initially "
+            "scanned for line-number candidates (default: 0.2). The exact "
+            "margin column is auto-detected from those candidates "
+            "afterwards, so this rarely needs changing -- widen it only "
+            "if the real numbering column sits further from the edge "
+            "than that."
         ),
     )
     parser.add_argument(
@@ -103,15 +108,19 @@ def main(argv=None):
 
     remarks, warnings = parse_remarks_file(args.remarks)
     for warning in warnings:
-        print(f"WARNING: {warning}", file=sys.stderr)
+        print(
+            f"WARNING: line {warning['line']}: unrecognized syntax, skipped: "
+            f"{warning['raw']!r}",
+            file=sys.stderr,
+        )
 
     placed, failures = annotate_pdf(doc, line_index, remarks, author=args.author)
 
-    report_text = build_report_text(
-        warnings, failures, author=args.author, date=args.date
-    )
-    if report_text:
-        add_report_annotation(doc, report_text)
+    report_entries = collect_report_entries(warnings, failures)
+    report_annots = []
+    if report_entries:
+        header = build_report_header(author=args.author, date=args.date)
+        report_annots = add_report_annotations(doc, header, report_entries)
 
     doc.save(args.output, garbage=4, deflate=True)
 
@@ -120,11 +129,13 @@ def main(argv=None):
     if failures:
         print(f"{len(failures)} remark(s) could NOT be anchored:", file=sys.stderr)
         for remark, reason in failures:
-            print(f"  - {reason} (remark: {remark['remark'][:80]!r})", file=sys.stderr)
-    if report_text:
+            print(f"  - {reason} (remark: {remark['raw']!r})", file=sys.stderr)
+    if report_annots:
+        pages_word = "page" if len(report_annots) == 1 else "pages"
         print(
-            "A report of the above was also added as a visible box on the "
-            "first page of the output PDF."
+            f"The {len(report_entries)} line(s) above were also written, "
+            f"verbatim, into a visible box on {len(report_annots)} "
+            f"{pages_word} of the output PDF."
         )
 
     return 1 if (failures or warnings) else 0

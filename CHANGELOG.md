@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.1.4 — 2026-07-07
+
+- The first-page report box now shows the raw, verbatim remarks-file
+  line(s) that were skipped or could not be anchored -- not where they
+  appear or why -- since that is what needs fixing. `remarks_parser`
+  entries and warnings now carry that original source text (`raw`).
+- Long raw lines wrap automatically (the PDF renderer already did this;
+  now relied upon on purpose). The box is sized to what it actually
+  contains, and overflows onto extra inserted pages, right after the
+  first page, if it does not all fit on one.
+- API change: `annotate.build_report_text` / `add_report_annotation` are
+  replaced by `build_report_header`, `collect_report_entries`, and
+  `add_report_annotations` (plural). `remarks_parser.parse_remarks`'s
+  `warnings` are now dicts (`{"line": int, "raw": str}`) instead of
+  pre-formatted strings.
+
+## 0.1.3 — 2026-07-07
+
+- `line_index`: the margin column is now auto-detected from the candidates
+  themselves (clustering on their right edge, since numbering packages
+  right-align the printed number) instead of relying solely on
+  `--margin-frac` to pin it down precisely. `--margin-frac` is now just a
+  coarse, rarely-tuned initial net; on the real test manuscript the index
+  now comes out identical (1485 lines) for `--margin-frac` anywhere from
+  0.15 to 0.45, instead of silently degrading as the value widens.
+- `tests/test_data/build_sample_pdf.py`: the synthetic fixture now
+  right-aligns its margin numbers, matching real `lineno` output (the
+  previous left-aligned fixture could not have caught the above).
+
 ## 0.1.2 — 2026-07-07
 
 - When any remarks-file line fails to parse, or any remark's anchor can't be

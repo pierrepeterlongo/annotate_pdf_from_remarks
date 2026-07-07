@@ -66,8 +66,14 @@ If anything was skipped — a remarks-file line that failed to parse, or a
 remark whose anchor could not be resolved in the PDF — it is, in addition
 to being printed on stderr, also written into a visible, bordered box
 (a PDF FreeText annotation) on the **first page** of the output PDF, along
-with the author and date. This box only appears when there is something to
-report; a fully clean run adds no such box.
+with the author and date. Only the raw, verbatim remarks-file line(s) are
+shown — not where they appear in the remarks file or why they failed, since
+what the manuscript's author needs is the exact text to go fix. Long lines
+wrap automatically; the box is sized to what it actually contains, and if
+that does not fit on one page, extra blank pages are inserted right after
+the first page to hold the rest. This box only appears when there is
+something to report; a fully clean run adds no such box and no extra
+pages.
 
 Run `annotate-pdf-from-remarks --help` for all options, notably:
 
@@ -130,15 +136,31 @@ PDFs carry no semantic tag for "this is a line number", so detection is
 heuristic (see `src/annotate_pdf_from_remarks/line_index.py` for the exact
 algorithm):
 
-1. Collect every text line made of a single span whose text is only digits
-   and which sits in the outer margin (leftmost/rightmost `--margin-frac` of
-   the page width — both edges are checked, to handle mirrored margins in
-   double-sided layouts).
-2. Read those candidates in page/vertical order and keep only the ones that
-   form a strictly increasing sequence, tolerating gaps (e.g. across a
-   full-page figure) but rejecting any jump larger than `--max-forward-jump`
-   or any non-increasing value — this discards footnote markers, equation
-   numbers, or other small digits that happen to sit in the margin band.
+1. A first, deliberately loose pass collects every text line made of a
+   single span whose text is only digits and which sits in the outer margin
+   (leftmost/rightmost `--margin-frac` of the page width — both edges are
+   checked, to handle mirrored margins in double-sided layouts). This is
+   just a coarse net, not the real filter.
+2. The actual margin column(s) are then auto-detected: a genuine line
+   number prints on (almost) every line of the document, so it recurs far
+   more often, at a far more consistent position, than any other digit
+   that happens to land in that band (a citation number, a footnote
+   marker, a page number, ...). Candidates are grouped by their **right**
+   edge (not their left edge — numbering packages typically right-align
+   the number, so `1` and `100` share a right edge but not a left one),
+   and only the bin(s) whose frequency is at least half that of the most
+   frequent bin are kept. This is what makes `--margin-frac` mostly a
+   non-issue in practice: it rarely needs tuning, since the real precision
+   comes from this step, not from the width of the initial net.
+3. Those surviving candidates are read in page/vertical order, and the
+   *longest* strictly increasing subsequence of numbers is extracted from
+   them (gaps are tolerated, e.g. across a full-page figure, up to
+   `--max-forward-jump`). Taking the longest such subsequence, rather than
+   greedily accepting the first strictly-increasing candidate, matters
+   because step 2 can still let through a little same-column noise (e.g. a
+   reused page number): a single early false positive would otherwise
+   desynchronise a naive greedy walk from the true numbering for the rest
+   of the document.
 
 This is a best-effort heuristic, not a guarantee: always check the CLI's
 summary output (and, if anchors go missing, `--dump-index`) after a run.

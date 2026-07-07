@@ -50,10 +50,14 @@ def _unescape(text):
 def parse_remarks(text):
     """Parse remarks-file content. Returns ``(remarks, warnings)``.
 
-    Each entry in ``remarks`` is a dict with keys ``chapter`` and ``remark``,
-    plus either ``line`` (int) for a line-number anchor, or ``find``,
-    ``page`` (``None`` or int) and ``occurrence`` (int, default 0) for a
-    text-search anchor.
+    Each entry in ``remarks`` is a dict with keys ``chapter``, ``remark``
+    and ``raw`` (the original remarks-file text that produced it, continuation
+    lines included, verbatim), plus either ``line`` (int) for a line-number
+    anchor, or ``find``, ``page`` (``None`` or int) and ``occurrence`` (int,
+    default 0) for a text-search anchor.
+
+    Each entry in ``warnings`` is a dict with keys ``line`` (1-indexed line
+    number in the remarks file) and ``raw`` (that line's verbatim text).
     """
     remarks = []
     warnings = []
@@ -67,6 +71,7 @@ def parse_remarks(text):
 
         if raw_line[0].isspace() and current is not None:
             current["remark"] += "\n" + raw_line.strip()
+            current["raw"] += "\n" + raw_line
             continue
 
         chapter_match = _CHAPTER_RE.match(raw_line)
@@ -81,6 +86,7 @@ def parse_remarks(text):
                 "chapter": chapter,
                 "line": int(line_match.group(1)),
                 "remark": line_match.group(2).strip(),
+                "raw": raw_line,
             }
             remarks.append(current)
             continue
@@ -101,11 +107,12 @@ def parse_remarks(text):
                     else 0
                 ),
                 "remark": find_match.group("remark").strip(),
+                "raw": raw_line,
             }
             remarks.append(current)
             continue
 
-        warnings.append(f"line {lineno}: unrecognized syntax, skipped: {raw_line!r}")
+        warnings.append({"line": lineno, "raw": raw_line})
         current = None
 
     return remarks, warnings

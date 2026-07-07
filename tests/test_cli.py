@@ -26,6 +26,7 @@ def test_author_and_date_default_when_not_given(sample_pdf_path, tmp_path):
     report_box = next(a for a in annots if a.type[1] == "FreeText")
     assert f"Author: {getpass.getuser()}" in report_box.info["content"]
     assert "Date: " in report_box.info["content"]
+    assert "l9999: an unresolvable remark" in report_box.info["content"]
 
     comment = next(a for a in annots if a.type[1] == "Text")
     assert comment.info.get("title") == getpass.getuser()
