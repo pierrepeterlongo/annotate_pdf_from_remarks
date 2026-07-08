@@ -75,7 +75,7 @@ def test_report_shows_raw_lines_with_no_location_reference(sample_pdf_path, tmp_
     ]
 
     header = build_report_header(author="Test Author", date="2026-07-07")
-    assert "Author: Test Author" in header
+    assert "Remarks author: Test Author" in header
     assert "Date: 2026-07-07" in header
     # The report is about raw lines, not about where/why they failed.
     assert "line 5" not in header

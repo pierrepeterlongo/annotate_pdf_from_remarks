@@ -24,7 +24,7 @@ def test_author_and_date_default_when_not_given(sample_pdf_path, tmp_path):
     annots = list(page.annots())
 
     report_box = next(a for a in annots if a.type[1] == "FreeText")
-    assert f"Author: {getpass.getuser()}" in report_box.info["content"]
+    assert f"Remarks author: {getpass.getuser()}" in report_box.info["content"]
     assert "Date: " in report_box.info["content"]
     assert "l9999: an unresolvable remark" in report_box.info["content"]
 
@@ -50,5 +50,5 @@ def test_author_and_date_can_be_overridden(sample_pdf_path, tmp_path):
     doc = fitz.open(output_path)
     page = doc[0]
     report_box = next(a for a in page.annots() if a.type[1] == "FreeText")
-    assert "Author: Jane Doe" in report_box.info["content"]
+    assert "Remarks author: Jane Doe" in report_box.info["content"]
     assert "Date: 2026-01-01" in report_box.info["content"]
