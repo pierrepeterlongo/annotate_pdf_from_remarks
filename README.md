@@ -9,6 +9,8 @@ Turn a plain-text list of review remarks into native PDF comment
 annotations, placed automatically next to the line, figure, or heading they
 refer to.
 
+![visual abstract](images/visual_abstract_apfs.png)
+
 See [CHANGELOG.md](CHANGELOG.md) for release history. The version badge
 above reads `pyproject.toml`'s `[project].version` directly from GitHub, so
 it updates on its own whenever that field is bumped — no README edit
