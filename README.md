@@ -1,4 +1,4 @@
-# annotate-pdf-from-remarks
+# Annotate pdf from text (.md or .txt files) remarks
 
 ![Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fpierrepeterlongo%2Fannotate_pdf_from_remarks%2Fmain%2Fpyproject.toml&query=%24.project.version&label=version&color=blue)
 ![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)
