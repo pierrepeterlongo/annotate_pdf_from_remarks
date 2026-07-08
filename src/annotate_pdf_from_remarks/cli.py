@@ -118,9 +118,9 @@ def main(argv=None):
 
     report_entries = collect_report_entries(warnings, failures)
     report_annots = []
-    if report_entries:
-        header = build_report_header(author=args.author, date=args.date)
-        report_annots = add_report_annotations(doc, header, report_entries)
+
+    header = build_report_header(author=args.author, date=args.date, entries=report_entries)
+    report_annots = add_report_annotations(doc, header, report_entries)
 
     doc.save(args.output, garbage=4, deflate=True)
 
@@ -130,8 +130,10 @@ def main(argv=None):
         print(f"{len(failures)} remark(s) could NOT be anchored:", file=sys.stderr)
         for remark, reason in failures:
             print(f"  - {reason} (remark: {remark['raw']!r})", file=sys.stderr)
-    if report_annots:
-        pages_word = "page" if len(report_annots) == 1 else "pages"
+
+    pages_word = "page" if len(report_annots) == 1 else "pages"
+    
+    if len(report_entries)>0:
         print(
             f"The {len(report_entries)} line(s) above were also written, "
             f"verbatim, into a visible box on {len(report_annots)} "

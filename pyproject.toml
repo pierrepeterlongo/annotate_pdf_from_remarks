@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "annotate-pdf-from-remarks"
-version = "0.1.4"
+version = "0.1.5"
 description = "Add PDF comment annotations to a line-numbered PDF from a plain-text remarks file"
 readme = "README.md"
 license = { text = "AGPL-3.0-or-later" }

@@ -82,7 +82,7 @@ def annotate_pdf(doc, line_index, remarks, author=None):
     return placed, failures
 
 
-def build_report_header(author=None, date=None):
+def build_report_header(author=None, date=None, entries=None):
     """Build the header block of the on-page report (see
     :func:`add_report_annotations`): title, author, date. No mention of
     warnings/failures counts -- those are conveyed by the raw lines
@@ -90,13 +90,14 @@ def build_report_header(author=None, date=None):
     """
     if date is None:
         date = datetime.date.today().isoformat()
-    lines = [
-        "Annotation report -- the remarks-file lines below could not be "
-        "placed as PDF comments:"
-    ]
+    lines = [ ]
     if author:
-        lines.append(f"Author: {author}")
+        lines.append(f"Remarks author: {author}")
     lines.append(f"Date: {date}")
+    
+    if entries and len(entries)>0:
+        lines.append("Lines below were not correctly parsed:")
+    
     return "\n".join(lines)
 
 
@@ -146,11 +147,8 @@ def add_report_annotations(
     If everything does not fit on a single page, extra blank pages are
     inserted right after ``page_index`` to hold the rest.
 
-    Returns the list of created annotations. Does nothing (returns ``[]``)
-    if ``entries`` is empty.
+    Returns the list of created annotations. 
     """
-    if not entries:
-        return []
 
     base_page = doc[page_index]
     box_width = base_page.rect.width - 2 * margin
@@ -171,10 +169,11 @@ def add_report_annotations(
         current_count += block_line_count
 
     push(header, _estimate_wrapped_line_count(header, fontsize, fontname, box_width))
-    for entry in entries:
-        # +1 for the blank separator line before the next block.
-        line_count = _estimate_wrapped_line_count(entry, fontsize, fontname, box_width) + 1
-        push(entry, line_count)
+    if entries:
+        for entry in entries:
+            # +1 for the blank separator line before the next block.
+            line_count = _estimate_wrapped_line_count(entry, fontsize, fontname, box_width) + 1
+            push(entry, line_count)
     if current_blocks:
         pages_content.append(current_blocks)
 

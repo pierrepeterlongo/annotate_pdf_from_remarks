@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5 — 2026-07-08
+
+- Prints the report even if there were no issue
+
 ## 0.1.4 — 2026-07-07
 
 - The first-page report box now shows the raw, verbatim remarks-file
